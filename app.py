@@ -13,6 +13,22 @@ from nltk.corpus import stopwords
 import json
 from datetime import datetime, timedelta
 import numpy as np
+import base64
+
+def get_csv_download_link(filename="sample_campaign.csv"):
+    """Generate a download link for sample CSV"""
+    sample_data = """date,impressions,clicks,conversions,cost
+2024-01-01,1500,75,10,150
+2024-01-02,1800,90,12,180
+2024-01-03,2000,100,15,200
+2024-01-04,1700,85,11,170
+2024-01-05,2200,110,18,220
+2024-01-06,2500,125,20,250
+2024-01-07,2300,115,19,230"""
+    
+    b64 = base64.b64encode(sample_data.encode()).decode()
+    href = f'data:file/csv;base64,{b64}'
+    return href
 
 # Load environment variables
 load_dotenv()
@@ -23,7 +39,7 @@ genai.configure(api_key=GOOGLE_API_KEY)
 
 # Initialize Gemini model
 model = genai.GenerativeModel('gemini-pro')
-vision_model = genai.GenerativeModel('gemini-pro-vision')
+vision_model = genai.GenerativeModel('gemini-1.5-flash')
 
 # Set page config
 st.set_page_config(
@@ -361,26 +377,68 @@ elif page == "Content Generator":
 elif page == "Campaign Analyzer":
     st.title("📊 Campaign Analyzer")
     
-    # Sample data template
+    # Download template section with better styling
     st.markdown("""
     ### 📥 Upload Campaign Data
-    Upload your campaign data in CSV format. Need a template? [Download Sample Template](#)
-    """)
+    <div class='feature-card'>
+    <p>Upload your campaign data in CSV format or download our sample template to get started.</p>
+    <a href="{}" download="sample_campaign.csv" target="_blank" 
+        style="
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #ff4b4b;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            margin: 10px 0;
+        "
+    >
+        📥 Download Sample Template
+    </a>
+    </div>
+    """.format(get_csv_download_link()), unsafe_allow_html=True)
     
+    # Sample format display
+    with st.expander("View Sample Format", expanded=False):
+        st.markdown("""
+        ```csv
+        date,impressions,clicks,conversions,cost
+        2024-01-01,1500,75,10,150
+        2024-01-02,1800,90,12,180
+        2024-01-03,2000,100,15,200
+        ```
+        
+        **Required Columns:**
+        - `date`: YYYY-MM-DD format
+        - `impressions`: Number of impressions
+        - `clicks`: Number of clicks
+        
+        **Optional Columns:**
+        - `conversions`: Number of conversions
+        - `cost`: Campaign cost in currency units
+        """)
+
     uploaded_file = st.file_uploader("Upload your campaign data (CSV)", type=['csv'])
     
     if uploaded_file:
         try:
+            # Read data and convert date column
             data = pd.read_csv(uploaded_file)
+            data['date'] = pd.to_datetime(data['date'])
             st.success("Data uploaded successfully!")
             
             # Time period selection
             col1, col2 = st.columns(2)
             with col1:
+                min_date = data['date'].min().date()
+                max_date = data['date'].max().date()
                 date_range = st.date_input(
                     "Select Date Range",
-                    value=(data['date'].min(), data['date'].max())
+                    value=(min_date, max_date),
+                    min_value=min_date,
+                    max_value=max_date
                 )
+            
             with col2:
                 metrics = st.multiselect(
                     "Select Metrics to Display",
@@ -388,31 +446,40 @@ elif page == "Campaign Analyzer":
                     default=['impressions', 'clicks']
                 )
             
+            # Filter data based on date range
+            mask = (data['date'].dt.date >= date_range[0]) & (data['date'].dt.date <= date_range[1])
+            filtered_data = data.loc[mask]
+            
             # Overview metrics
             st.subheader("Campaign Overview")
             metric_cols = st.columns(4)
             
             with metric_cols[0]:
+                total_impressions = filtered_data['impressions'].sum()
+                pct_change_impressions = ((filtered_data['impressions'].iloc[-1] - filtered_data['impressions'].iloc[0]) / filtered_data['impressions'].iloc[0] * 100) if len(filtered_data) > 1 else 0
                 st.metric(
                     "Total Impressions",
-                    f"{data['impressions'].sum():,.0f}",
-                    f"{data['impressions'].pct_change().mean():.1%}"
+                    f"{total_impressions:,.0f}",
+                    f"{pct_change_impressions:.1f}%"
                 )
             
             with metric_cols[1]:
+                total_clicks = filtered_data['clicks'].sum()
+                pct_change_clicks = ((filtered_data['clicks'].iloc[-1] - filtered_data['clicks'].iloc[0]) / filtered_data['clicks'].iloc[0] * 100) if len(filtered_data) > 1 else 0
                 st.metric(
                     "Total Clicks",
-                    f"{data['clicks'].sum():,.0f}",
-                    f"{data['clicks'].pct_change().mean():.1%}"
+                    f"{total_clicks:,.0f}",
+                    f"{pct_change_clicks:.1f}%"
                 )
             
             with metric_cols[2]:
-                ctr = (data['clicks'].sum() / data['impressions'].sum()) * 100
+                ctr = (total_clicks / total_impressions * 100) if total_impressions > 0 else 0
                 st.metric("Average CTR", f"{ctr:.2f}%")
             
             with metric_cols[3]:
-                if 'cost' in data.columns:
-                    cpc = data['cost'].sum() / data['clicks'].sum()
+                if 'cost' in filtered_data.columns:
+                    total_cost = filtered_data['cost'].sum()
+                    cpc = total_cost / total_clicks if total_clicks > 0 else 0
                     st.metric("Average CPC", f"${cpc:.2f}")
             
             # Performance over time
@@ -420,22 +487,29 @@ elif page == "Campaign Analyzer":
             fig = go.Figure()
             
             for metric in metrics:
-                fig.add_trace(
-                    go.Scatter(
-                        x=data['date'],
-                        y=data[metric],
-                        name=metric.capitalize(),
-                        mode='lines+markers'
+                if metric in filtered_data.columns:
+                    fig.add_trace(
+                        go.Scatter(
+                            x=filtered_data['date'],
+                            y=filtered_data[metric],
+                            name=metric.capitalize(),
+                            mode='lines+markers'
+                        )
                     )
-                )
             
             fig.update_layout(
                 title="Campaign Performance Over Time",
                 xaxis_title="Date",
                 yaxis_title="Value",
                 hovermode='x unified',
-                showlegend=True
+                showlegend=True,
+                plot_bgcolor='black',
+                paper_bgcolor='black',
+                font=dict(color='white'),
+                xaxis=dict(gridcolor='#333333'),
+                yaxis=dict(gridcolor='#333333')
             )
+            
             st.plotly_chart(fig, use_container_width=True)
             
             # Performance analysis
@@ -443,9 +517,10 @@ elif page == "Campaign Analyzer":
                 with st.spinner("Analyzing campaign performance..."):
                     analysis_prompt = f"""
                     Analyze this campaign data and provide insights:
-                    - Total Impressions: {data['impressions'].sum():,.0f}
-                    - Total Clicks: {data['clicks'].sum():,.0f}
+                    - Total Impressions: {total_impressions:,.0f}
+                    - Total Clicks: {total_clicks:,.0f}
                     - Average CTR: {ctr:.2f}%
+                    - Date Range: {date_range[0]} to {date_range[1]}
                     
                     Provide:
                     1. Key performance insights
@@ -459,7 +534,15 @@ elif page == "Campaign Analyzer":
         
         except Exception as e:
             st.error(f"Error processing file: {str(e)}")
-            st.markdown("Please ensure your CSV file has the required columns: date, impressions, clicks")
+            st.markdown("""
+            Please ensure your CSV file has the following format:
+            ```
+            date,impressions,clicks,conversions,cost
+            2024-01-01,1500,75,10,150
+            ```
+            Required columns: date, impressions, clicks
+            Optional columns: conversions, cost
+            """)
 
 # Visual Content Creator
 elif page == "Visual Content Creator":
