@@ -1,0 +1,46 @@
+{
+    "brand_settings": {
+        "name": "Sample Brand",
+        "colors": {
+            "primary": "#FF4B4B",
+            "secondary": "#000000",
+            "accent": "#4B4BFF"
+        },
+        "fonts": {
+            "primary": "Arial",
+            "secondary": "Georgia"
+        },
+        "tone_of_voice": "Professional",
+        "target_platforms": ["Instagram", "LinkedIn", "Facebook"]
+    },
+    "content_defaults": {
+        "social_media": {
+            "post_length": 280,
+            "hashtags_count": 3,
+            "include_cta": true
+        },
+        "email": {
+            "subject_length": 60,
+            "body_length": 500,
+            "include_preview": true
+        },
+        "blog": {
+            "min_words": 800,
+            "max_words": 1500,
+            "seo_keywords": 5
+        }
+    },
+    "target_audience": {
+        "age_range": "25-45",
+        "interests": [
+            "Technology",
+            "Digital Marketing",
+            "Business Innovation"
+        ],
+        "locations": [
+            "North America",
+            "Europe",
+            "Asia Pacific"
+        ]
+    }
+} 
