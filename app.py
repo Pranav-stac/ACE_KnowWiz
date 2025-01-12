@@ -33,40 +33,180 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Custom CSS with improved styling
+# Dark theme CSS with guaranteed visibility
 st.markdown("""
     <style>
+    /* Global dark theme */
     .main {
-        background-color: #f8f9fa;
+        background-color: #000000 !important;
+        color: #ffffff !important;
     }
-    .stButton>button {
-        background-color: #ff4b4b;
-        color: white;
-        border-radius: 5px;
-        padding: 0.5rem 1rem;
-        border: none;
-        transition: all 0.3s ease;
+    
+    /* All text elements */
+    p, span, label, div, li, td, th, h1, h2, h3, h4, h5, h6 {
+        color: #ffffff !important;
     }
-    .stButton>button:hover {
-        background-color: #ff3333;
-        transform: translateY(-2px);
+    
+    /* All containers and cards */
+    .stMarkdown, .element-container, .stTextInput, .stTextArea, .stSelectbox, 
+    .stMultiSelect, .stSlider, .stCheckbox, .stFileUploader, .stTabs, 
+    .streamlit-expanderHeader, [data-testid="stSidebar"], .stAlert, 
+    .stMetricValue, .stProgress {
+        background-color: #000000 !important;
+        color: #ffffff !important;
     }
-    .stTextInput>div>div>input {
-        border-radius: 5px;
-    }
-    .success-message {
-        padding: 1rem;
-        border-radius: 5px;
-        background-color: #d4edda;
-        border: 1px solid #c3e6cb;
-        color: #155724;
-    }
+    
+    /* Feature cards */
     .feature-card {
-        padding: 1.5rem;
-        border-radius: 10px;
-        background-color: white;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        margin-bottom: 1rem;
+        background-color: #1a1a1a !important;
+        color: #ffffff !important;
+        padding: 20px !important;
+        border-radius: 10px !important;
+        border: 1px solid #333333 !important;
+        margin: 10px 0 !important;
+    }
+    
+    /* Headers */
+    h1, h2, h3, h4, h5, h6 {
+        color: #ffffff !important;
+        background-color: #000000 !important;
+        padding: 10px !important;
+    }
+    
+    /* Input fields */
+    .stTextInput>div>div>input, 
+    .stTextArea>div>div>textarea, 
+    .stSelectbox>div>div>div {
+        background-color: #1a1a1a !important;
+        color: #ffffff !important;
+        border: 1px solid #333333 !important;
+    }
+    
+    /* Buttons */
+    .stButton>button {
+        background-color: #ff4b4b !important;
+        color: #ffffff !important;
+        border: none !important;
+    }
+    
+    /* Tabs */
+    .stTabs [data-baseweb="tab"] {
+        background-color: #1a1a1a !important;
+        color: #ffffff !important;
+    }
+    
+    .stTabs [aria-selected="true"] {
+        background-color: #ff4b4b !important;
+        color: #ffffff !important;
+    }
+    
+    /* Expander */
+    .streamlit-expanderHeader {
+        background-color: #1a1a1a !important;
+        color: #ffffff !important;
+    }
+    
+    /* Sidebar */
+    [data-testid="stSidebar"] {
+        background-color: #1a1a1a !important;
+        color: #ffffff !important;
+    }
+    
+    /* Metrics */
+    div[data-testid="stMetricValue"] {
+        background-color: #1a1a1a !important;
+        color: #ffffff !important;
+    }
+    
+    /* File uploader */
+    .stFileUploader>div>div {
+        background-color: #1a1a1a !important;
+        color: #ffffff !important;
+        border: 1px dashed #333333 !important;
+    }
+    
+    /* Multiselect */
+    .stMultiSelect>div>div>div {
+        background-color: #1a1a1a !important;
+        color: #ffffff !important;
+    }
+    
+    /* Tables */
+    .dataframe {
+        color: #ffffff !important;
+    }
+    
+    .dataframe th {
+        background-color: #1a1a1a !important;
+        color: #ffffff !important;
+    }
+    
+    .dataframe td {
+        background-color: #000000 !important;
+        color: #ffffff !important;
+    }
+    
+    /* Links */
+    a {
+        color: #ff4b4b !important;
+    }
+    
+    a:hover {
+        color: #ff6b6b !important;
+    }
+    
+    /* Code blocks */
+    code {
+        background-color: #1a1a1a !important;
+        color: #ffffff !important;
+    }
+    
+    /* Plotly charts background */
+    .js-plotly-plot {
+        background-color: #000000 !important;
+    }
+    
+    /* Success messages */
+    .success-message {
+        background-color: #1a1a1a !important;
+        color: #ffffff !important;
+        border: 1px solid #28a745 !important;
+    }
+    
+    /* Error messages */
+    .stAlert {
+        background-color: #1a1a1a !important;
+        color: #ffffff !important;
+        border: 1px solid #dc3545 !important;
+    }
+    
+    /* Checkbox */
+    .stCheckbox>div>div>div>label {
+        color: #ffffff !important;
+    }
+    
+    /* Selectbox options */
+    .stSelectbox>div>div>div>ul {
+        background-color: #1a1a1a !important;
+    }
+    
+    .stSelectbox>div>div>div>ul>li {
+        color: #ffffff !important;
+    }
+    
+    /* All other elements */
+    * {
+        color: #ffffff !important;
+        border-color: #333333 !important;
+    }
+    
+    /* Scrollbar */
+    ::-webkit-scrollbar {
+        background-color: #000000 !important;
+    }
+    
+    ::-webkit-scrollbar-thumb {
+        background-color: #333333 !important;
     }
     </style>
     """, unsafe_allow_html=True)
